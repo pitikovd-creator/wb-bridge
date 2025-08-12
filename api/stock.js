@@ -10,10 +10,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const r = await fetch(
-      "https://statistics-api.wildberries.ru/api/v1/supplier/stocks",
-      { headers: { Authorization: process.env.WB_STATS_TOKEN } }
-    );
+    const response = await fetch(
+  "https://statistics-api.wildberries.ru/api/v1/supplier/stocks",
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.WB_STATS_TOKEN}`
+    }
+  }
+);
 
     if (!r.ok) {
       const text = await r.text();
