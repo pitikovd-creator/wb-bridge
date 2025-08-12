@@ -1,12 +1,5 @@
 {
   "name": "wb-bridge",
   "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "start": "node api/[[...path]].js"
-  },
-  "dependencies": {
-    "express": "^4.19.2",
-    "node-fetch": "^3.3.2"
-  }
+  "private": true
 }
