@@ -14,7 +14,7 @@ function guard(req, res, next) {
 }
 
 // healthcheck
-app.get("/", (req, res) => {
+app.get(["/", "/api", "/api/"], (req, res) => {
   res.send("WB Bridge is alive");
 });
 
