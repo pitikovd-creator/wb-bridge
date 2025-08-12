@@ -82,6 +82,3 @@ app.get("/stock", guard, async (_req, res) => {
 export default function handler(req, res) {
   return app(req, res);
 }
-export default function handler(req, res) {
-  return app(req, res);
-}
