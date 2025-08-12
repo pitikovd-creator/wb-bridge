@@ -13,8 +13,8 @@ function guard(req, res, next) {
   next();
 }
 
-// Healthcheck — проверка, что сервер жив
-app.get("/", (req, res) => {
+// Healthcheck — покрываем и "/", и "/api", и "/api/"
+app.get(["/", "/api", "/api/"], (_req, res) => {
   res.send("WB Bridge is alive");
 });
 
