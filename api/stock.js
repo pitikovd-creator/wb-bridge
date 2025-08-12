@@ -1,26 +1,16 @@
-// api/stock.js
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
+  if (req.method !== "GET") return res.status(405).json({ error: "Method Not Allowed" });
 
-  // защита по ключу моста
   const apiKey = req.headers["x-api-key"];
   if (!apiKey || apiKey !== process.env.BRIDGE_API_KEY) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    // ЭТО ИМЕННО stocks, параметров не требует
-    const r = await fetch(
-      "https://statistics-api.wildberries.ru/api/v1/supplier/stocks",
-      { headers: { Authorization: process.env.WB_STATS_TOKEN } }
-    );
-
-    if (!r.ok) {
-      const text = await r.text();
-      return res.status(r.status).send(text);
-    }
+    const r = await fetch("https://statistics-api.wildberries.ru/api/v1/supplier/stocks", {
+      headers: { Authorization: process.env.WB_STATS_TOKEN }
+    });
+    if (!r.ok) return res.status(r.status).send(await r.text());
 
     const data = await r.json();
     return res.status(200).json({
