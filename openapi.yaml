@@ -1,0 +1,31 @@
+openapi: 3.1.0
+info:
+  title: WB Bridge
+  version: 1.0.0
+servers:
+  - url: https://YOUR-VERCEL-URL.vercel.app/api
+paths:
+  /sales/daily:
+    get:
+      summary: Daily sales summary
+      description: Returns orders count, revenue and sample rows for a given date (YYYY-MM-DD)
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - in: query
+          name: date
+          schema: { type: string, format: date }
+          required: true
+      responses:
+        "200": { description: Ok }
+  /stock:
+    get:
+      summary: Current stocks snapshot
+      security: [{ ApiKeyAuth: [] }]
+      responses:
+        "200": { description: Ok }
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
