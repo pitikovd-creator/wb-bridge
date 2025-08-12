@@ -66,4 +66,7 @@ app.get("/stock", guard, async (req, res) => {
 });
 
 // --- ОБЯЗАТЕЛЬНО: экспортируем Express-приложение ---
-export default app;
+// Правильный экспорт для Vercel: пробрасываем запросы в Express
+export default function handler(req, res) {
+  return app(req, res);
+}
