@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
-// Защита ключом моста
+// Защита ключом моста (не WB токен)
 function guard(req, res, next) {
   const clientKey = req.header("X-Api-Key");
   if (!clientKey || clientKey !== process.env.BRIDGE_API_KEY) {
@@ -13,56 +13,79 @@ function guard(req, res, next) {
   next();
 }
 
-// Healthcheck — для /api/ и корня
-app.get("/", (_req, res) => {
+// Healthcheck — проверка, что сервер жив
+app.get("/", (req, res) => {
   res.send("WB Bridge is alive");
 });
 
 // Продажи за день
 app.get("/sales/daily", guard, async (req, res) => {
   const { date } = req.query;
-  if (!date) return res.status(400).json({ error: "date is required (YYYY-MM-DD)" });
+  if (!date) {
+    return res.status(400).json({ error: "date is required (YYYY-MM-DD)" });
+  }
 
   try {
-    const r = await fetch(
-      "https://statistics-api.wildberries.ru/api/v1/supplier/sales?dateFrom=" + encodeURIComponent(date),
-      { headers: { Authorization: process.env.WB_STATS_TOKEN } }
+    const wbResp = await fetch(
+      "https://statistics-api.wildberries.ru/api/v1/supplier/sales?dateFrom=" +
+        encodeURIComponent(date),
+      {
+        headers: { Authorization: process.env.WB_STATS_TOKEN },
+      }
     );
-    if (!r.ok) {
-      const t = await r.text();
-      return res.status(r.status).json({ error: "WB error", details: t });
+
+    if (!wbResp.ok) {
+      const t = await wbResp.text();
+      return res.status(wbResp.status).json({ error: "WB error", details: t });
     }
-    const raw = await r.json();
+
+    const raw = await wbResp.json();
     const orders = Array.isArray(raw) ? raw.length : 0;
-    const revenue = Array.isArray(raw) ? raw.reduce((s, x) => s + (x?.totalPrice || 0), 0) : 0;
-    res.json({ date, orders, revenue, sample: Array.isArray(raw) ? raw.slice(0, 5) : [] });
+    const revenue = Array.isArray(raw)
+      ? raw.reduce((sum, x) => sum + (x?.totalPrice || 0), 0)
+      : 0;
+
+    res.json({
+      date,
+      orders,
+      revenue,
+      sample: Array.isArray(raw) ? raw.slice(0, 5) : [],
+    });
   } catch (e) {
-    res.status(500).json({ error: "bridge_failed", details: String(e) });
+    res
+      .status(500)
+      .json({ error: "bridge_failed", details: String(e) });
   }
 });
 
 // Остатки
-app.get("/stock", guard, async (_req, res) => {
+app.get("/stock", guard, async (req, res) => {
   try {
-    const r = await fetch(
+    const wbResp = await fetch(
       "https://statistics-api.wildberries.ru/api/v1/supplier/stocks",
-      { headers: { Authorization: process.env.WB_STATS_TOKEN } }
+      {
+        headers: { Authorization: process.env.WB_STATS_TOKEN },
+      }
     );
-    if (!r.ok) {
-      const t = await r.text();
-      return res.status(r.status).json({ error: "WB error", details: t });
+
+    if (!wbResp.ok) {
+      const t = await wbResp.text();
+      return res.status(wbResp.status).json({ error: "WB error", details: t });
     }
-    const data = await r.json();
+
+    const data = await wbResp.json();
     res.json({
       total_items: Array.isArray(data) ? data.length : 0,
-      items: Array.isArray(data) ? data.slice(0, 20) : []
+      items: Array.isArray(data) ? data.slice(0, 20) : [],
     });
   } catch (e) {
-    res.status(500).json({ error: "bridge_failed", details: String(e) });
+    res
+      .status(500)
+      .json({ error: "bridge_failed", details: String(e) });
   }
 });
 
-// Обязательный экспорт для Vercel
+// Экспортируем Express приложение для Vercel
 export default function handler(req, res) {
   return app(req, res);
 }
