@@ -4,14 +4,7 @@ import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
-// 1) Снимаем префикс /api, который добавляет Vercel
-app.use((req, _res, next) => {
-  if (req.url === "/api") req.url = "/";
-  else if (req.url.startsWith("/api/")) req.url = req.url.slice(4);
-  next();
-});
-
-// 2) Защита ключом моста (НЕ WB токен!)
+// Защита ключом моста
 function guard(req, res, next) {
   const clientKey = req.header("X-Api-Key");
   if (!clientKey || clientKey !== process.env.BRIDGE_API_KEY) {
@@ -20,12 +13,12 @@ function guard(req, res, next) {
   next();
 }
 
-// 3) Healthcheck — ловим и "/", и "/api", и "/api/"
-app.get(["/", "/api", "/api/"], (_req, res) => {
+// Healthcheck — для /api/ и корня
+app.get("/", (_req, res) => {
   res.send("WB Bridge is alive");
 });
 
-// 4) Продажи за день: GET /api/sales/daily?date=YYYY-MM-DD  (+ Header X-Api-Key)
+// Продажи за день
 app.get("/sales/daily", guard, async (req, res) => {
   const { date } = req.query;
   if (!date) return res.status(400).json({ error: "date is required (YYYY-MM-DD)" });
@@ -48,7 +41,7 @@ app.get("/sales/daily", guard, async (req, res) => {
   }
 });
 
-// 5) Остатки: GET /api/stock  (+ Header X-Api-Key)
+// Остатки
 app.get("/stock", guard, async (_req, res) => {
   try {
     const r = await fetch(
@@ -69,7 +62,7 @@ app.get("/stock", guard, async (_req, res) => {
   }
 });
 
-// 6) Правильный экспорт для Vercel — пробрасываем запросы в Express
+// Обязательный экспорт для Vercel
 export default function handler(req, res) {
   return app(req, res);
 }
