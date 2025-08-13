@@ -1,3 +1,12 @@
 {
-  "version": 2
+  "version": 2,
+  "functions": {
+    "api/**/*.{js,ts}": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "crons": [
+    { "path": "/api/cron/push-stocks",      "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/push-sales-daily", "schedule": "10 * * * *"   }
+  ]
 }
